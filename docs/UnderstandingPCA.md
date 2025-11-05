@@ -366,23 +366,33 @@ PC1 score for H1 (manual): -2.0162
 
 ## PCA summary
 
-- PCA reduces dimensionality: From 6 genes to 2 PCs that capture most
-  variation
-  - Example: PC1 is the best summary of example data because captures
-    the direction of maximum variance
-- Variance explained matters: If PC1 and PC2 explain 90%+ of variance,
-  you can safely visualize your data in 2D  
-- Loadings show gene importance: Large loadings indicate which genes
-  drive the patterns
-- PCA is unsupervised: Without using healthy and cancer labels PCA
-  computations find the separation.
+- PCA reduces dimensionality: Summarizes thousands of genes into a few
+  principal components that explain most of the variation. - Example:
+  From 6 genes to 2 PCs that capture most variation. PC1 represents the
+  direction of maximum variance and strongest overall pattern in the
+  data.  
+- Variance explained matters: If PC1 and PC2 explain \>90% of the total
+  variance, a 2D visualization captures most of the structure in data.  
+- Loadings show gene influence: Large loadings indicate which genes
+  contribute most to each component, revealing the drivers of the
+  observed patterns.  
+- PCA is unsupervised: Without using labels (healthy and cancer) the
+  structure or patterns in the data can be detected,
+- Interpretability: By projecting genes into eigenspace, PCA summarizes
+  complex patterns but loses direct gene-level biological meaning.
+  However, the loadings matrix still provides insight into each gene’s
+  contribution to the principal components.
 
-## Clinical Relevance
+## Clinical relevance
 
-PCA can help - identify subtypes of a disease  
-- find outliers that is, samples that don’t fit expected patterns. These
-could be due to tissue contamination or rare variants  
-- identify bath effects and further adjust for them; and visualize
-before/after adjustment  
-- with biomarker discovery such as genes with high loadings on
-clinically relevant PCs
+PCA translates high-dimensional data into interpretable clinical
+patterns.
+
+- Identify disease subtypes: Unsupervised clustering in eigenspace can
+  reveal hidden biological groups.  
+- Find outliers: Samples that don’t fit expected patterns might indicate
+  tissue mix-ups, contamination, or rare variants.  
+- Detect batch effects: Visualize unwanted technical variation and
+  confirm its correction before/after adjustment.
+- Guide biomarker discovery: Genes with strong loadings on clinically
+  relevant PCs often point to key molecular players.

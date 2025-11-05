@@ -3,14 +3,18 @@
 ## Why PCA?
 
 Imagine studying gene expression in healthy control and cancer patient
-tissues. You measure the activity of 20,000 genes in each tissue. How do
+tissues. Activity of ~20,000 genes in each tissue is measured. How do
 you
 
-1.  `Visualize` these data? (2 genes = 2 dimensions = xy-scatter plot to
-    understand patterns; 20,000 genes = 20,000 dimensions = plotting in
-    a way our brain gets it easily is not possible)  
-2.  `Find patterns` that distinguish healthy from diseased tissue?
-3.  `Identify` which tissues are similar to each other?
+- `Visualize` these data?
+
+  - 2 genes = 2 dimensions = xy-scatter plot to understand patterns
+  - 20,000 genes = 20,000 dimensions = plotting in a way our brain gets
+    it easily is not possible
+
+- `Find patterns` that distinguish healthy from diseased tissue?
+
+- `Identify` which tissues are similar to each other?
 
 PCA is like creating a summary of data. It finds the most important
 patterns and lets you visualize complex data in 2D or 3D.
@@ -31,18 +35,33 @@ PCs that capture most of the important differences between samples.*
 
 ## Example dataset: gene expression in cancer
 
-Using a much smaller data set than real data to understand PCA: **8
+Using a much smaller dataset than real data to understand PCA: **8
 samples** (4 healthy, 4 cancer) and **6 genes**.
 
-    ## [1] "Gene expression data (rows=genes, columns=samples):"
+``` r
+# Create a small gene expression dataset
+# Rows = genes, Columns = samples (this is standard in genomics)
 
-    ##        H1  H2  H3  H4  C1  C2  C3  C4
-    ## Gene1 2.1 2.3 2.0 2.2 8.1 8.5 8.0 8.3
-    ## Gene2 7.8 8.1 7.9 8.0 3.2 3.0 3.1 3.3
-    ## Gene3 5.1 5.3 5.2 5.0 5.4 5.2 5.3 5.1
-    ## Gene4 3.0 3.2 3.1 2.9 6.8 7.0 6.9 7.1
-    ## Gene5 4.5 4.6 4.4 4.5 4.3 4.4 4.5 4.6
-    ## Gene6 6.2 6.0 6.3 6.1 2.1 2.3 2.0 2.2
+gene_expression <- matrix(c(
+  # Healthy samples (H1-H4)    Cancer samples (C1-C4)
+  2.1, 2.3, 2.0, 2.2,          8.1, 8.5, 8.0, 8.3,  # Gene1 - highly expressed in cancer
+  7.8, 8.1, 7.9, 8.0,          3.2, 3.0, 3.1, 3.3,  # Gene2 - highly expressed in healthy
+  5.1, 5.3, 5.2, 5.0,          5.4, 5.2, 5.3, 5.1,  # Gene3 - similar in both
+  3.0, 3.2, 3.1, 2.9,          6.8, 7.0, 6.9, 7.1,  # Gene4 - higher in cancer
+  4.5, 4.6, 4.4, 4.5,          4.3, 4.4, 4.5, 4.6,  # Gene5 - very similar
+  6.2, 6.0, 6.3, 6.1,          2.1, 2.3, 2.0, 2.2   # Gene6 - higher in healthy
+), nrow = 6, byrow = TRUE)
+
+rownames(gene_expression) <- paste0("Gene", 1:6)
+colnames(gene_expression) <- c("H1", "H2", "H3", "H4", "C1", "C2", "C3", "C4")
+```
+
+Gene expression data (rows=genes, columns=samples):
+
+2.1, 7.8, 5.1, 3, 4.5, 6.2, 2.3, 8.1, 5.3, 3.2, 4.6, 6, 2, 7.9, 5.2,
+3.1, 4.4, 6.3, 2.2, 8, 5, 2.9, 4.5, 6.1, 8.1, 3.2, 5.4, 6.8, 4.3, 2.1,
+8.5, 3, 5.2, 7, 4.4, 2.3, 8, 3.1, 5.3, 6.9, 4.5, 2, 8.3, 3.3, 5.1, 7.1,
+4.6, 2.2
 
 ### Visualize raw data
 
@@ -261,6 +280,29 @@ The `rotation matrix` (also called `loadings`) show how much each gene
 contributes to each PC and which genes drive the separation in the PCA
 plot.
 
+The mathematical core or heart of PCA is how these loadings are
+computed!
+
+- Corr/Covariance matrix: PCA first calculates how genes vary together
+  across samples. This is captured in the correlation matrix (when
+  `scale=TRUE`) or covariance matrix (when `scale=FALSE`). The matrix
+  *C* = \[1/*n*\]\[*X*<sup>*T*</sup>*X*\] says how much any two genes
+  tend to increase/decrease together. Here, X = matrix of `n` samples
+  and `p` genes. A 6-gene dataset produces a 6×6 correlation matrix
+  (because `scale = TRUE`).
+
+- Eigenvalue decomposition: Using the matrix `C`, this step finds the
+
+  - eigenvectors (the loadings) = directions in gene space that capture
+    the most variance; and
+  - eigenvalues = how much variance each direction captures
+  - i.e., basically V and D are computed in the equation
+    *C* = *V**D**V*<sup>*T*</sup> where
+    - V = matrix of eigen vectors which are the loadings or rotation
+      matrix  
+    - D = diagonal matrix of eigenvalues which represent the variance
+      explained
+
 ``` r
 # Get loadings
 loadings <- pca_result$rotation
@@ -399,35 +441,5 @@ before/after adjustment
 clinically relevant PCs
 
 ``` r
-sessionInfo()
+#sessionInfo()
 ```
-
-    ## R version 4.5.2 (2025-10-31)
-    ## Platform: x86_64-apple-darwin20
-    ## Running under: macOS Tahoe 26.0.1
-    ## 
-    ## Matrix products: default
-    ## BLAS:   /Library/Frameworks/R.framework/Versions/4.5-x86_64/Resources/lib/libRblas.0.dylib 
-    ## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
-    ## 
-    ## locale:
-    ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-    ## 
-    ## time zone: America/Chicago
-    ## tzcode source: internal
-    ## 
-    ## attached base packages:
-    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
-    ## 
-    ## other attached packages:
-    ## [1] reshape2_1.4.4  pheatmap_1.0.13 ggplot2_4.0.0  
-    ## 
-    ## loaded via a namespace (and not attached):
-    ##  [1] vctrs_0.6.5        cli_3.6.5          knitr_1.50         rlang_1.1.6       
-    ##  [5] xfun_0.54          stringi_1.8.7      S7_0.2.0           labeling_0.4.3    
-    ##  [9] glue_1.8.0         plyr_1.8.9         htmltools_0.5.8.1  scales_1.4.0      
-    ## [13] rmarkdown_2.30     grid_4.5.2         evaluate_1.0.5     fastmap_1.2.0     
-    ## [17] yaml_2.3.10        lifecycle_1.0.4    stringr_1.5.2      compiler_4.5.2    
-    ## [21] RColorBrewer_1.1-3 Rcpp_1.1.0         farver_2.1.2       digest_0.6.37     
-    ## [25] R6_2.6.1           magrittr_2.0.4     tools_4.5.2        withr_3.0.2       
-    ## [29] gtable_0.3.6

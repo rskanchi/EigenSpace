@@ -1,3 +1,11 @@
+``` r
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 6, warning = FALSE, message = FALSE)
+library(ggplot2)
+library(pheatmap)
+library(reshape2)
+set.seed(123)
+```
+
 # Principal Component Analysis
 
 ## Why PCA?
@@ -56,13 +64,6 @@ rownames(gene_expression) <- paste0("Gene", 1:6)
 colnames(gene_expression) <- c("H1", "H2", "H3", "H4", "C1", "C2", "C3", "C4")
 ```
 
-Gene expression data (rows=genes, columns=samples):
-
-2.1, 7.8, 5.1, 3, 4.5, 6.2, 2.3, 8.1, 5.3, 3.2, 4.6, 6, 2, 7.9, 5.2,
-3.1, 4.4, 6.3, 2.2, 8, 5, 2.9, 4.5, 6.1, 8.1, 3.2, 5.4, 6.8, 4.3, 2.1,
-8.5, 3, 5.2, 7, 4.4, 2.3, 8, 3.1, 5.3, 6.9, 4.5, 2, 8.3, 3.3, 5.1, 7.1,
-4.6, 2.2
-
 ### Visualize raw data
 
 ![](UnderstandingPCA_files/figure-markdown_github/visualize_raw-1.png)
@@ -114,14 +115,11 @@ Performing PCA using `prcomp()` in R requires **samples as rows** and
 ``` r
 # Transpose the data so samples are rows
 pca_data <- t(gene_expression)
-print("Data transposed for PCA (samples as rows):")
+# Run PCA with centering and scaling
+pca_result <- prcomp(pca_data, center = TRUE, scale. = TRUE)
 ```
 
-    ## [1] "Data transposed for PCA (samples as rows):"
-
-``` r
-print(pca_data)
-```
+Data transposed for PCA (samples as rows):
 
     ##    Gene1 Gene2 Gene3 Gene4 Gene5 Gene6
     ## H1   2.1   7.8   5.1   3.0   4.5   6.2
@@ -133,36 +131,13 @@ print(pca_data)
     ## C3   8.0   3.1   5.3   6.9   4.5   2.0
     ## C4   8.3   3.3   5.1   7.1   4.6   2.2
 
-``` r
-# Run PCA with centering and scaling
-pca_result <- prcomp(pca_data, center = TRUE, scale. = TRUE)
-
-# What does prcomp return?
-print("\nComponents of PCA result:")
-```
-
-    ## [1] "\nComponents of PCA result:"
-
-``` r
-print(names(pca_result))
-```
-
-    ## [1] "sdev"     "rotation" "center"   "scale"    "x"
+The PCA result has the following components: sdev, rotation, center,
+scale, x
 
 ### Standard deviations and variance explained
 
-``` r
-# Standard deviations of each PC
-print("Standard deviations of each PC:")
-```
-
-    ## [1] "Standard deviations of each PC:"
-
-``` r
-print(pca_result$sdev)
-```
-
-    ## [1] 2.07406699 1.06419691 0.74786562 0.06227544 0.04259705 0.02711711
+Standard deviations of each PC: 2.074067, 1.0641969, 0.7478656,
+0.0622754, 0.042597, 0.0271171.
 
 ``` r
 # Variance explained by each PC
@@ -176,14 +151,9 @@ variance_df <- data.frame(
   Variance_explained = round(proportion_variance * 100, 2),
   Cumulative_explained = round(cumulative_variance * 100,2)
 )
-print("\nVariance explained:")
 ```
 
-    ## [1] "\nVariance explained:"
-
-``` r
-print(variance_df, 2)
-```
+Variance explained:
 
     ##    PC PC_variance Variance_explained Cumulative_explained
     ## 1 PC1      4.3018              71.70                71.70
@@ -195,8 +165,8 @@ print(variance_df, 2)
 
 `Total variance` = all the differences between samples across all
 genes.  
-- `PC1` captures the largest chunk of these differences - `PC2` captures
-the next largest chunk (independent of PC1)
+- `PC1` captures the largest chunk of these differences  
+- `PC2` captures the next largest chunk (independent of PC1)
 
 PC1 explains 71.7% of all variance! That means most of the differences
 between samples can be seen in just one dimension.
@@ -211,7 +181,7 @@ ggplot(variance_df, aes(x = PC, y = Variance_explained)) +
   labs(title = "Scree Plot: Variance Explained by Each PC",
        y = "Proportion of variance (%)",
        x = "Principal component") +
-  theme_minimal(12) +
+  theme_minimal(15) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
@@ -224,14 +194,14 @@ ggplot(variance_df, aes(x = PC, y = Variance_explained)) +
 ``` r
 # Get PC scores
 pc_scores <- pca_result$x
-print("PC Scores (coordinates of samples in PC space):")
+
+# Create a data frame for plotting
+pc_df <- as.data.frame(pc_scores)
+pc_df$Sample <- rownames(pc_scores)
+pc_df$Group <- ifelse(grepl("^H", pc_df$Sample), "Healthy", "Cancer")
 ```
 
-    ## [1] "PC Scores (coordinates of samples in PC space):"
-
-``` r
-print(round(pc_scores, 2))
-```
+PC Scores (coordinates of samples in PC space):
 
     ##      PC1   PC2   PC3   PC4   PC5   PC6
     ## H1 -2.02  0.07 -0.27  0.01  0.05 -0.03
@@ -243,13 +213,6 @@ print(round(pc_scores, 2))
     ## C3  1.93  0.29  0.57  0.08  0.06  0.00
     ## C4  1.37  1.92  0.00 -0.04 -0.01  0.03
 
-``` r
-# Create a data frame for plotting
-pc_df <- as.data.frame(pc_scores)
-pc_df$Sample <- rownames(pc_scores)
-pc_df$Group <- ifelse(grepl("^H", pc_df$Sample), "Healthy", "Cancer")
-```
-
 The PCA plot is generated using the PC sample scores. Each sample gets a
 score that’s a weighted average of the gene expression. The 2D plot of
 PC1 (x-axis) and PC2 (y-axis) is the standard output of PCA.
@@ -257,12 +220,11 @@ PC1 (x-axis) and PC2 (y-axis) is the standard output of PCA.
 ``` r
 ggplot(pc_df, aes(x = PC1, y = PC2, color = Group, label = Sample)) +
   geom_point(size = 5) +
-  geom_text(vjust = -1, size = 4) +
+  geom_text(vjust = 1, size = 4) +
   labs(title = "PCA Plot: Healthy vs Cancer samples",
-       x = paste0("PC1 (", round(proportion_variance[1]*100, 1), "% variance)"),
-       y = paste0("PC2 (", round(proportion_variance[2]*100, 1), "% variance)")) +
-  theme_minimal() +
-  theme(legend.position = "top") +
+       x = paste0("PC1 (", round(proportion_variance[1]*100, 1), "%)"),
+       y = paste0("PC2 (", round(proportion_variance[2]*100, 1), "%)")) +
+  theme_minimal(15) + theme(legend.position = "top") +
   scale_color_manual(values = c("Healthy" = "darkgreen", "Cancer" = "red"))
 ```
 
@@ -306,14 +268,9 @@ computed!
 ``` r
 # Get loadings
 loadings <- pca_result$rotation
-print("Loadings (how genes contribute to PCs):")
 ```
 
-    ## [1] "Loadings (how genes contribute to PCs):"
-
-``` r
-print(round(loadings[, 1:3], 3))
-```
+Loadings (how genes contribute to PCs):
 
     ##          PC1    PC2    PC3
     ## Gene1  0.474  0.159 -0.064
@@ -336,16 +293,12 @@ loading_df$Gene <- factor(loading_df$Gene, levels = loading_df$Gene)
 ggplot(loading_df, aes(x = Gene, y = PC1, fill = PC1 > 0)) +
   geom_bar(stat = "identity", width = 0.5, alpha = 0.7) +
   labs(title = "Contribution to PC1", y = "PC1 loading", x = "Gene") +
-  theme_minimal(12) + theme(legend.position = "none", panel.grid.minor.x = element_blank()) +
+  theme_minimal(15) + theme(legend.position = "none", panel.grid.minor.x = element_blank()) +
   scale_fill_manual(values = c("TRUE" = "red", "FALSE" = "blue")) +
   coord_flip()
 ```
 
 ![](UnderstandingPCA_files/figure-markdown_github/loading_plot-1.png)
-
-``` r
-rm(loading_df)
-```
 
 - Positive loadings on PC1: Genes high in cancer (Gene1, Gene4)
 - Negative loadings on PC1: Genes high in healthy (Gene2, Gene6)
@@ -403,17 +356,10 @@ print(loadings)
 h1_scaled <- verify_df[1, ]  # H1 scaled gene values
 pc1_loadings <- loadings[, 1]
 h1_pc1 <- sum(h1_scaled * pc1_loadings)
-
-print(paste("PC1 score for H1 (manual):", round(h1_pc1, 4)))
 ```
 
-    ## [1] "PC1 score for H1 (manual): -2.0162"
-
-``` r
-print(paste("prcomp() result:", round(pc_scores[1, 1], 4)))
-```
-
-    ## [1] "prcomp() result: -2.0162"
+PC1 score for H1 (manual): -2.0162  
+`prcomp()` result: -2.0162
 
 ------------------------------------------------------------------------
 
@@ -439,7 +385,3 @@ could be due to tissue contamination or rare variants
 before/after adjustment  
 - with biomarker discovery such as genes with high loadings on
 clinically relevant PCs
-
-``` r
-#sessionInfo()
-```

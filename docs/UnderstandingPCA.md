@@ -1,11 +1,3 @@
-``` r
-knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 6, warning = FALSE, message = FALSE)
-library(ggplot2)
-library(pheatmap)
-library(reshape2)
-set.seed(123)
-```
-
 # Principal Component Analysis
 
 ## Why PCA?
@@ -40,6 +32,14 @@ Each PC is a combination of original genes (like a weighted average)
 PCs that capture most of the important differences between samples.*
 
 ------------------------------------------------------------------------
+
+``` r
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.height = 6, warning = FALSE, message = FALSE)
+library(ggplot2)
+library(pheatmap)
+library(reshape2)
+set.seed(123)
+```
 
 ## Example dataset: gene expression in cancer
 
@@ -220,7 +220,8 @@ PC1 (x-axis) and PC2 (y-axis) is the standard output of PCA.
 ``` r
 ggplot(pc_df, aes(x = PC1, y = PC2, color = Group, label = Sample)) +
   geom_point(size = 5) +
-  geom_text(vjust = 1, size = 4) +
+  geom_text(hjust = 1.5, size = 4) +
+  xlim(c(-2.5,2.5)) +
   labs(title = "PCA Plot: Healthy vs Cancer samples",
        x = paste0("PC1 (", round(proportion_variance[1]*100, 1), "%)"),
        y = paste0("PC2 (", round(proportion_variance[2]*100, 1), "%)")) +

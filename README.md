@@ -52,14 +52,16 @@ Rscript run_pca.R
 - **Expression CSV**: first column = IDs. Use the orientation toggle to say whether rows are features or samples. (Demo is features × samples.)
 - **Metadata CSV** (optional): first column = sample IDs matching the expression sample IDs exactly. Remaining columns are traits; the app auto-detects categorical vs quantitative and lets you override.
 
-## Outputs (one zip, named by your run label)
+## Outputs (one zip folder)
+
+This part takes a while to show up so you can `Save as` a zip folder. However, when you save it and unzip the folder, you see the following structure to files and folders:    
 
 ```
 <project_name>/
 ├── <project_name>_PCA.pptx   # title, methods (bullets), results, per-trait slides
 ├── figures/              # every plot as a 600-dpi PNG
 ├── tables/               # variance, scores, loadings, ANOVA, trait–PC correlations (CSV)
-└── summary.txt           # manuscript paragraph + bullets
+└── summary.txt           # summary/manuscript paragraph
 ```
 
 If you would like an overview of PCA based on the demo dataset of 8 samples and 6 genes, see [Understanding PCA](docs/UnderstandingPCA.md).

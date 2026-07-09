@@ -6,11 +6,11 @@ figures, CSV tables, and a manuscript-ready paragraph.
 ## Structure
 
 ```
-pca_app/
+EigenSpace/
 ├── app.R              # Shiny app
 ├── run_pca.R          # R script to run PCA without GUI/Shiny
 ├── R/
-│   ├── pca_engine.R   # read & align inputs, preprocess, prcomp, result tables, trait tests
+│   ├── pca_setup.R   # read & align inputs, preprocess, prcomp, result tables, trait tests
 │   ├── pca_plots.R    # generate plots using ggplot2
 │   ├── pca_summary.R  # manuscript paragraph & slide bullets
 │   └── pca_export.R   # build run, save 600 dpi PNGs + CSVs + officer pptx, zip
@@ -19,7 +19,7 @@ pca_app/
     └── demo_metadata.csv     # Group (categorical), Batch (categorical), RIN (quantitative)
 ```
 
-The engine, plots, summary, and export functions have no Shiny dependency, so you can `source()` them and call `build_run()` / `export_run()` from any script.
+The setup, plots, summary, and export functions have no Shiny dependency, so you can `source()` them and call `build_run()` / `export_run()` from any script.
 
 ## Install
 
@@ -31,7 +31,7 @@ install.packages(c("shiny", "ggplot2", "officer"))
 
 ## Run the app
 
-From inside the `pca_app/` folder:
+From inside the `EigenSpace/` folder:
 
 ```r
 shiny::runApp()
@@ -55,8 +55,8 @@ Rscript run_pca.R
 ## Outputs (one zip, named by your run label)
 
 ```
-<run_name>/
-├── <run_name>_PCA.pptx   # title, methods (bullets), results, per-trait slides
+<project_name>/
+├── <project_name>_PCA.pptx   # title, methods (bullets), results, per-trait slides
 ├── figures/              # every plot as a 600-dpi PNG
 ├── tables/               # variance, scores, loadings, ANOVA, trait–PC correlations (CSV)
 └── summary.txt           # manuscript paragraph + bullets

@@ -1,0 +1,9 @@
+Sample,Group,Batch,RIN
+H1,Healthy,B1,8.2
+H2,Healthy,B1,7.9
+H3,Healthy,B2,8.5
+H4,Healthy,B2,8.0
+C1,Cancer,B1,6.1
+C2,Cancer,B1,6.4
+C3,Cancer,B2,5.8
+C4,Cancer,B2,6.6

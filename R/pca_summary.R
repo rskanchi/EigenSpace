@@ -1,9 +1,6 @@
-# =============================================================================
-# pca_summary.R  --  Build the manuscript-ready paragraph and the bullet text
-# used on the pptx slides. Attribution is generated from the actual run.
-# =============================================================================
+# pca_summary.R:  summary as a starting point for a writeup and the bullet text for the pptx slides
 
-#' A short methods sentence with the live R version and the real settings.
+# Short methods sentence
 methods_sentence <- function(settings, n_samples, n_features) {
   pre <- c()
   if (isTRUE(settings$log2))   pre <- c(pre, "log2(x + 1)-transformed")
@@ -16,9 +13,9 @@ methods_sentence <- function(settings, n_samples, n_features) {
     "using the prcomp() function from the stats package in %s.%s ",
     "Visualizations were produced with the ggplot2 package."),
     n_samples, n_features, R.version.string, pre_txt)
-}
+} # end of methods_sentence
 
-#' Results sentence summarizing variance captured by the leading PCs.
+# Results sentence summarizing variance captured by the leading PCs
 results_sentence <- function(variance) {
   pc1 <- variance$percent_variance[1]
   pc2 <- if (nrow(variance) >= 2) variance$percent_variance[2] else NA
@@ -29,9 +26,9 @@ results_sentence <- function(variance) {
     sprintf(paste0("PC1 and PC2 explained %.1f%% and %.1f%% of the total ",
                    "variance, respectively (cumulatively %.1f%%)."),
             pc1, pc2, cum2)
-}
+} # end of results_sentence
 
-#' Optional trait-association sentences.
+# Optional trait-association sentences
 trait_sentences <- function(anova_tabs = NULL, corr_long = NULL) {
   s <- character(0)
   alpha <- 0.05
@@ -58,19 +55,17 @@ trait_sentences <- function(anova_tabs = NULL, corr_long = NULL) {
   s
 } # end of trait_sentences
 
-#' Assemble the full manuscript paragraph (methods + results + associations).
-manuscript_paragraph <- function(settings, report, variance,
-                                  anova_tabs = NULL, corr_long = NULL) {
+# Assemble the full manuscript paragraph (methods + results + associations).
+manuscript_paragraph <- function(settings, report, variance, anova_tabs = NULL, corr_long = NULL) {
   paste(c(
     methods_sentence(settings, report$n_matched, report$n_features),
     results_sentence(variance),
     trait_sentences(anova_tabs, corr_long)
   ), collapse = " ")
-}
+} # end of manuscript_paragraph
 
-#' Bullet lists for the slides (named list of character vectors).
-slide_bullets <- function(settings, report, variance,
-                          anova_tabs = NULL, corr_long = NULL) {
+# Bullet lists for the slides (named list of character vectors).
+slide_bullets <- function(settings, report, variance, anova_tabs = NULL, corr_long = NULL) {
   pre <- c(
     sprintf("log2(x + 1) transform: %s", if (settings$log2) "yes" else "no"),
     sprintf("Centering: %s", if (settings$center) "yes" else "no"),

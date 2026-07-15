@@ -1,17 +1,10 @@
-# =============================================================================
-# pca_engine.R  --  Core PCA computation (no Shiny, no plotting)
-#
-# This file is the "engine": plain functions you can source and call from a
-# script, a report, or the Shiny app. The core computation uses stats::prcomp().
-# =============================================================================
+# pca_setup.R includes PCA computation (no Shiny, no plotting)
 
-# ---- 1. Read & align inputs -------------------------------------------------
-
-#' Read an expression file and return a numeric matrix in genes x samples form.
-#' Accepts row names OR a first ID column. orientation tells us how the file is
-#' laid out; we always return genes(features) x samples internally.
-read_expression <- function(path, orientation = c("features_x_samples",
-                                                   "samples_x_features")) {
+# 1. Read & align inputs
+# Read an expression file and return a numeric matrix in genes x samples form
+# Accepts row names OR a first ID column; orientation informs the way file is organized
+# the output matrix returned is genes(features) x samples
+read_expression <- function(path, orientation = c("features_x_samples","samples_x_features")) {
   orientation <- match.arg(orientation)
   df <- utils::read.csv(path, header = TRUE, check.names = FALSE,
                         stringsAsFactors = FALSE)
@@ -22,9 +15,9 @@ read_expression <- function(path, orientation = c("features_x_samples",
   storage.mode(mat) <- "double"
   if (orientation == "samples_x_features") mat <- t(mat)  # -> features x samples
   mat
-}
+} # end of read_expression
 
-#' Read a metadata file. First column (or row names) must be sample IDs.
+# Read a metadata file. First column (or row names) must be sample IDs
 read_metadata <- function(path) {
   if (is.null(path) || is.na(path) || !nzchar(path)) return(NULL)
   df <- utils::read.csv(path, header = TRUE, check.names = FALSE,
@@ -35,8 +28,8 @@ read_metadata <- function(path) {
   df
 }
 
-#' Align expression (genes x samples) with metadata by shared sample IDs.
-#' Returns the analysis-ready objects plus a human-readable matching report.
+# Align expression (genes x samples) with metadata by shared sample IDs
+# Returns the objects for analysis and a report
 align_inputs <- function(expr_genes_x_samples, metadata = NULL) {
   expr_samples <- colnames(expr_genes_x_samples)
   if (is.null(metadata)) {
@@ -63,28 +56,25 @@ align_inputs <- function(expr_genes_x_samples, metadata = NULL) {
                         else setdiff(rownames(metadata), common)
   )
   list(expr = expr_aligned, metadata = meta_aligned, report = report)
-}
+} # end of align_inputs
 
-# ---- 2. Preprocess & run PCA ------------------------------------------------
+# Preprocess & run PCA
 
-#' Apply optional log2(x + 1) to a genes x samples matrix.
-#' The +1 offset keeps zeros finite (log2(0) = -Inf) and is applied to every
-#' value when logging is on; the fact that it was applied is recorded for the
-#' methods text.
-apply_log2 <- function(expr_genes_x_samples, do_log2 = FALSE) {
+# Optional log2(x + 1) to a genes x samples matrix
+log2_transform <- function(expr_genes_x_samples, do_log2 = FALSE) {
   if (!do_log2) return(expr_genes_x_samples)
   if (any(expr_genes_x_samples < 0, na.rm = TRUE))
     warning("Negative values present; log2(x + 1) of a negative number is NaN. ",
             "Check whether these data are already log-transformed.")
   log2(expr_genes_x_samples + 1)
-}
+} # end of log2_transform
 
-#' Run PCA. Input is genes x samples; prcomp wants samples as rows, so we
-#' transpose here. center/scale are passed straight to prcomp (the core
-#' computation). Returns the prcomp object plus tidy result tables.
-run_pca <- function(expr_genes_x_samples, center = TRUE, scale = FALSE,
-                    do_log2 = FALSE) {
-  expr <- apply_log2(expr_genes_x_samples, do_log2)
+# Run PCA
+# Input = genes x samples expr matrix; prcomp requires samples as rows
+# center/scale are passed as arguemnts
+# Returns the prcomp object plus tidy result tables
+run_pca <- function(expr_genes_x_samples, center = TRUE, scale = FALSE, do_log2 = FALSE) {
+  expr <- log2_transform(expr_genes_x_samples, do_log2)
   X <- t(expr)                                  # samples x features
   # Drop zero-variance features when scaling (prcomp errors otherwise).
   if (scale) {
@@ -115,12 +105,12 @@ run_pca <- function(expr_genes_x_samples, center = TRUE, scale = FALSE,
   list(prcomp = pca, variance = variance,
        scores = scores, loadings = loadings,
        settings = list(center = center, scale = scale, log2 = do_log2))
-}
+} # end of run_pca
 
-# ---- 3. Metadata trait classification & tests -------------------------------
+# Metadata trait classification & tests
 
-#' Auto-classify each metadata column as "categorical" or "quantitative".
-#' Numeric columns with few distinct values are treated as categorical.
+# Auto-classify each metadata column as "categorical" or "quantitative"
+# Numeric columns with few distinct values are treated as categorical
 classify_traits <- function(metadata, max_levels_numeric = 5L) {
   if (is.null(metadata) || ncol(metadata) == 0)
     return(data.frame(trait = character(0), type = character(0),
@@ -134,10 +124,10 @@ classify_traits <- function(metadata, max_levels_numeric = 5L) {
                stringsAsFactors = FALSE)
   })
   do.call(rbind, out)
-}
+} # end of classify_traits
 
-#' One-way ANOVA of each PC against a categorical trait.
-#' Returns PC, F, p for the requested PCs.
+# One-way ANOVA of each PC against a categorical trait
+# Returns PC, F, p for the requested PCs
 anova_pc_by_group <- function(scores, group, pcs = c("PC1", "PC2")) {
   pcs <- intersect(pcs, colnames(scores))
   group <- factor(group)
@@ -149,9 +139,9 @@ anova_pc_by_group <- function(scores, group, pcs = c("PC1", "PC2")) {
                stringsAsFactors = FALSE)
   })
   do.call(rbind, res)
-}
+} # end of anova_pc_by_group
 
-#' Pearson correlation of each PC with a quantitative trait.
+# Pearson correlation of each PC with a quantitative trait
 cor_pc_with_trait <- function(scores, trait_values, pcs = colnames(scores)) {
   res <- lapply(pcs, function(pc) {
     ct <- suppressWarnings(stats::cor.test(scores[[pc]], trait_values,
@@ -162,10 +152,8 @@ cor_pc_with_trait <- function(scores, trait_values, pcs = colnames(scores)) {
   do.call(rbind, res)
 }
 
-#' Full trait x PC correlation table (quantitative traits), long format,
-#' suitable for a heatmap and for export.
-trait_pc_correlations <- function(scores, metadata, quant_traits,
-                                  pcs = colnames(scores)) {
+# Full trait x PC correlation table (quantitative traits) in long format for a heatmap and for export
+trait_pc_correlations <- function(scores, metadata, quant_traits, pcs = colnames(scores)) {
   if (length(quant_traits) == 0) return(NULL)
   rows <- lapply(quant_traits, function(tr) {
     tab <- cor_pc_with_trait(scores, as.numeric(metadata[[tr]]), pcs)

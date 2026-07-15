@@ -8,8 +8,7 @@ suppressPackageStartupMessages({
   library(ggplot2)
 })
 # officer is needed only when exporting; loaded lazily in pca_export.R.
-src <- file.path("R", c("pca_engine.R", "pca_plots.R",
-                        "pca_summary.R", "pca_export.R"))
+src <- file.path("R", c("pca_engine.R", "pca_plots.R", "pca_summary.R", "pca_export.R"))
 invisible(lapply(src, source))
 
 DEMO_EXPR <- "data/demo_expression.csv"
@@ -51,7 +50,7 @@ ui <- fluidPage(
       actionButton("run", "Run PCA", class = "btn-primary"),
       tags$br(), tags$br(),
       downloadButton("download_zip", "Download results (.zip)")
-    ),
+    ), # sidebarPanel
     mainPanel(
       width = 8,
       tabsetPanel(
@@ -65,10 +64,10 @@ ui <- fluidPage(
         tabPanel("Summary", h4("Summary, use as a starting point..."),
                  verbatimTextOutput("paragraph")),
         tabPanel("Help / Learn", uiOutput("help_ui"))
-      )
+      ) # tabsetPanel
     ) # end of mainPanel
-  )
-)
+  ) # end of sidebarLayout
+) # end of UI
 
 # ---- Server -----------------------------------------------------------------
 server <- function(input, output, session) {
@@ -92,7 +91,7 @@ server <- function(input, output, session) {
     read_metadata(rv$meta_path)
   })
 
-  # Dynamic trait-type override UI, one selector per metadata column.
+  # Dynamic trait-type override UI, one selector per metadata column
   output$trait_ui <- renderUI({
     md <- metadata(); if (is.null(md)) return(NULL)
     cls <- classify_traits(md)
@@ -105,8 +104,9 @@ server <- function(input, output, session) {
                     selected = cls$type[i])
       })
     )
-  })
-
+  }) # end of output$trait_ui
+  
+  # override auto comprehension based on user specification
   trait_overrides <- reactive({
     md <- metadata(); if (is.null(md)) return(NULL)
     nms <- names(md)
@@ -114,7 +114,7 @@ server <- function(input, output, session) {
                    character(1))
     vals <- vals[!is.na(vals)]
     if (length(vals) == 0) NULL else vals
-  })
+  }) # end of trait_overrides
 
   observeEvent(input$run, {
     req(rv$expr_path)
@@ -146,7 +146,7 @@ server <- function(input, output, session) {
           paste0("Dropped (no metadata match): ",
                  paste(rep$dropped_from_expr, collapse = ", "), "\n") else "")
     }
-  })
+  }) # end of output$status
 
   output$variance_tbl <- renderTable({ req(rv$run); rv$run$pca$variance })
   output$scree_plot    <- renderPlot({ req(rv$run); rv$run$plots$scree })
@@ -163,7 +163,8 @@ server <- function(input, output, session) {
       w <- if (grepl("^scores_", nm)) "55%" else "75%"
       plotOutput(paste0("tp_", nm), height = 380, width = w)
     })
-  })
+  }) # end of output$trait_plot_ui
+  
   observe({
     req(rv$run)
     nms <- grep("^(scores_|violin_|trait_pc)", names(rv$run$plots), value = TRUE)
@@ -215,6 +216,6 @@ server <- function(input, output, session) {
       "majority of the variance. It is raw and un-logged, so the demo runs with ",
       "centering + scaling.</p>"))
   })
-}
+} # end of server
 
 shinyApp(ui, server)

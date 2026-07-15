@@ -1,15 +1,12 @@
-# =============================================================================
-# pca_export.R  --  Turn a PCA run into artifacts: 600-dpi figures, CSV tables,
+# pca_export.R: export results, 600-dpi figures, CSV tables, 
 # a bulleted PowerPoint (officer), a manuscript paragraph, all zipped.
-#
 # Depends on the engine, plots, and summary files being sourced first.
-# =============================================================================
 
 DPI <- 600
 
-#' Decide which traits to use and of what type, honoring user overrides.
-#' overrides: optional named character vector, e.g.
-#'   c(Group = "categorical", RIN = "quantitative", Batch = "ignore")
+# Decide which traits to use and of what type, honoring user overrides.
+# overrides: optional named character vector, e.g.
+#   c(Group = "categorical", RIN = "quantitative", Batch = "ignore")
 resolve_traits <- function(metadata, overrides = NULL) {
   if (is.null(metadata)) return(list(categorical = character(0),
                                      quantitative = character(0)))
@@ -22,7 +19,7 @@ resolve_traits <- function(metadata, overrides = NULL) {
        quantitative = names(types)[types == "quantitative"])
 }
 
-#' Run the whole analysis and return every object needed for display & export.
+# Run the whole analysis and return every object needed for display & export.
 build_run <- function(expr_genes_x_samples, metadata = NULL,
                       center = TRUE, scale = FALSE, do_log2 = FALSE,
                       trait_overrides = NULL, n_dim = 10) {
@@ -72,7 +69,7 @@ build_run <- function(expr_genes_x_samples, metadata = NULL,
        bullets = bullets, paragraph = paragraph)
 }
 
-# ---- Writers ----------------------------------------------------------------
+# ---- Outputs
 
 write_tables <- function(run, dir) {
   dir.create(dir, showWarnings = FALSE, recursive = TRUE)
@@ -109,7 +106,7 @@ write_summary <- function(run, path) {
              path)
 }
 
-#' Build the PowerPoint with officer. fig_dir must already contain the PNGs.
+# Build the PowerPoint with officer; fig_dir must already contain the PNGs.
 write_pptx <- function(run, path, fig_dir, project_name = "PCA analysis") {
   if (!requireNamespace("officer", quietly = TRUE))
     stop("Package 'officer' is required to write the PowerPoint.")
@@ -174,10 +171,10 @@ write_pptx <- function(run, path, fig_dir, project_name = "PCA analysis") {
   doc <- ph_with(doc, value = para, location = ph_location_type(type = "body"))
   print(doc, target = path)
   invisible(path)
-}
+} # end of write_pptx
 
-#' Top-level: write everything for a run into <outdir>/<project_name>/... and zip it.
-#' Returns the path to the zip file.
+# Top-level: write everything for a run into <outdir>/<project_name>/... and zip it
+# Returns the path to the zip file
 export_run <- function(run, outdir, project_name = "pca_run") {
   safe <- gsub("[^A-Za-z0-9_.-]+", "_", project_name)
   root <- file.path(outdir, safe)

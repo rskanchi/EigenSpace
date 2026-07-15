@@ -1,9 +1,6 @@
-# =============================================================================
-# pca_plots.R  --  ggplot2 builders. Each returns a ggplot object so the caller
-# decides how to render/save (the export layer saves them at 600 dpi).
-# =============================================================================
+# pca_plots.R  --  builds plots to render/save (the export layer saves them at 600 dpi)
 
-# Okabe-Ito colourblind-safe palette (from the original doPCA).
+# colorblind-safe palette (from the original doPCA)
 PCA_PALETTE <- c("#009E73", "#CC79A7", "#0072B2", "#E69F00",
                  "#661100", "#332288", "#999933", "#56B4E9", "#D55E00", "#000000")
 
@@ -12,7 +9,7 @@ PCA_PALETTE <- c("#009E73", "#CC79A7", "#0072B2", "#E69F00",
     ggplot2::theme(legend.position = "top")
 }
 
-#' Scree plot: percent variance explained per PC (bars), with a line overlay.
+# Scree plot: percent variance explained per PC (bars), with a line overlay
 plot_scree <- function(variance, n_dim = 10) {
   v <- utils::head(variance, n_dim)
   v$PC <- factor(v$PC, levels = v$PC)
@@ -24,9 +21,9 @@ plot_scree <- function(variance, n_dim = 10) {
                   x = "Principal component", y = "Proportion of variance (%)") +
     .pca_base_theme() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-}
+} # end of plot_scree
 
-#' Cumulative variance explained.
+# Cumulative variance explained
 plot_cumulative <- function(variance, n_dim = 10) {
   v <- utils::head(variance, n_dim)
   v$PC <- factor(v$PC, levels = v$PC)
@@ -40,14 +37,14 @@ plot_cumulative <- function(variance, n_dim = 10) {
                   x = "Principal component", y = "Cumulative variance (%)") +
     .pca_base_theme() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-}
+} # end of plot_cumulative
 
 .axis_lab <- function(variance, pc) {
   i <- as.integer(sub("PC", "", pc))
   sprintf("%s (%.1f%%)", pc, variance$percent_variance[i])
 }
 
-#' Score plot with no grouping (unsupervised view).
+# Score plot with no grouping (unsupervised view)
 plot_scores_plain <- function(scores, variance, pcs = c("PC1", "PC2")) {
   d <- scores; d$Sample <- rownames(scores)
   ggplot2::ggplot(d, ggplot2::aes(.data[[pcs[1]]], .data[[pcs[2]]], label = Sample)) +
@@ -58,16 +55,15 @@ plot_scores_plain <- function(scores, variance, pcs = c("PC1", "PC2")) {
     .pca_base_theme()
 }
 
-#' Score plot coloured by a categorical trait. ellipses = none/stat.
-plot_scores_categorical <- function(scores, variance, group, group_name,
-                                     pcs = c("PC1", "PC2"), ellipse = FALSE) {
+# Score plot colored by a categorical trait; ellipses = none/stat.
+plot_scores_categorical <- function(scores, variance, group, group_name, pcs = c("PC1", "PC2"), ellipse = FALSE) {
   d <- scores; d$Sample <- rownames(scores); d$Group <- factor(group)
   p <- ggplot2::ggplot(d, ggplot2::aes(.data[[pcs[1]]], .data[[pcs[2]]], colour = Group)) +
     ggplot2::geom_point(size = 3) +
     ggplot2::geom_text(ggplot2::aes(label = Sample), vjust = -1, size = 3, show.legend = FALSE) +
     ggplot2::scale_colour_manual(values = PCA_PALETTE, name = group_name) +
     ggplot2::labs(
-      title = sprintf("PCA score plot coloured by %s%s", group_name,
+      title = sprintf("PCA score plot colored by %s%s", group_name,
                       if (ellipse) " (95% ellipses)" else ""),
       x = .axis_lab(variance, pcs[1]), y = .axis_lab(variance, pcs[2])) +
     .pca_base_theme()
@@ -75,12 +71,10 @@ plot_scores_categorical <- function(scores, variance, group, group_name,
     p <- p + ggplot2::stat_ellipse(ggplot2::aes(group = Group), level = 0.95,
                                    type = "norm", linetype = "dashed")
   p
-}
+} # end of plot_scores_categorical
 
-
-#' Score plot coloured by a quantitative trait (continuous gradient).
-plot_scores_gradient <- function(scores, variance, trait_values, trait_name,
-                                 pcs = c("PC1", "PC2")) {
+# Score plot colored by a quantitative trait (continuous gradient)
+plot_scores_gradient <- function(scores, variance, trait_values, trait_name, pcs = c("PC1", "PC2")) {
   d <- scores; d$Sample <- rownames(scores); d$Trait <- as.numeric(trait_values)
   ggplot2::ggplot(d, ggplot2::aes(.data[[pcs[1]]], .data[[pcs[2]]],
                                   colour = Trait, label = Sample)) +
@@ -88,12 +82,12 @@ plot_scores_gradient <- function(scores, variance, trait_values, trait_name,
     ggplot2::geom_text(vjust = -1, size = 3, colour = "grey30") +
     ggplot2::scale_colour_gradient(low = "#2C7BB6", high = "#D7191C",
                                    name = trait_name) +
-    ggplot2::labs(title = sprintf("PCA score plot coloured by %s", trait_name),
+    ggplot2::labs(title = sprintf("PCA score plot colored by %s", trait_name),
                   x = .axis_lab(variance, pcs[1]), y = .axis_lab(variance, pcs[2])) +
     .pca_base_theme()
-}
+} # end of plot_scores_gradient
 
-#' Loadings bar plot for one PC (genes ordered by contribution).
+# Loadings bar plot for one PC (genes ordered by contribution)
 plot_loadings <- function(loadings, pc = "PC1") {
   d <- data.frame(Feature = rownames(loadings), Loading = loadings[[pc]],
                   stringsAsFactors = FALSE)
@@ -109,9 +103,9 @@ plot_loadings <- function(loadings, pc = "PC1") {
                   x = "Feature", y = sprintf("%s loading", pc)) +
     .pca_base_theme() +
     ggplot2::theme(legend.position = "none")
-}
+} # end of plot_loadings
 
-#' Heatmap of trait x PC correlations (quantitative traits).
+# Heatmap of trait x PC correlations (quantitative traits)
 plot_trait_pc_heatmap <- function(corr_long, max_pc = 5) {
   corr_long <- corr_long[corr_long$PC %in% paste0("PC", seq_len(max_pc)), ]
   corr_long$PC <- factor(corr_long$PC, levels = paste0("PC", seq_len(max_pc)))
@@ -126,8 +120,8 @@ plot_trait_pc_heatmap <- function(corr_long, max_pc = 5) {
     .pca_base_theme()
 }
 
-#' Violin + box of a single PC's scores across a categorical trait,
-#' with the one-way ANOVA p-value in the subtitle.
+# Violin + box of a single PC's scores across a categorical trait,
+# with the one-way ANOVA p-value in the subtitle.
 plot_violin_pc <- function(scores, group, group_name, pc = "PC1") {
   d <- data.frame(Group = factor(group), Score = scores[[pc]])
   fit <- stats::aov(Score ~ Group, data = d)
